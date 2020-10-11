@@ -14,7 +14,7 @@ public class Api {
 //                .baseUrl("https://umorili.herokuapp.com")
                 .baseUrl("http://gitlab.65apps.com/65gb/static/raw/master/")
                 .addConverterFactory(GsonConverterFactory.create())
-//                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build();
     }
 

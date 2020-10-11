@@ -5,6 +5,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -12,22 +13,31 @@ import com.demo.retrofitapptest.adapter.EmployeeAdapter;
 import com.demo.retrofitapptest.pojo.Employee;
 import com.demo.retrofitapptest.pojo.EmployeeResponse;
 
-import java.util.ArrayList;
-import java.util.List;
 
+import java.util.ArrayList;
+
+import io.reactivex.Scheduler;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+
 
 public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
-//    private PostsAdapter adapter;
+    //    private PostsAdapter adapter;
     private EmployeeAdapter adapter;
     private TextView textViewText;
     private TextView textViewIni;
+    Disposable disposable;
+
+    @Override
+    protected void onDestroy() {
+        if (disposable !=null) {
+        disposable.dispose();
+        }
+        super.onDestroy();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,19 +58,35 @@ public class MainActivity extends AppCompatActivity {
 
         Api api = Api.getApi();
         ServiceApi serviceApi = api.getServiceApi();
+        disposable = serviceApi.getEmployees()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<EmployeeResponse>() {
+                    @Override
+                    public void accept(EmployeeResponse employeeResponse) throws Exception {
+                        adapter.setEmployees(employeeResponse.getResponse());
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception {
+                        Toast.makeText(MainActivity.this, "Error" + throwable.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
 
-        serviceApi.getEmployees().enqueue(new Callback<EmployeeResponse>() {
-            @Override
-            public void onResponse(Call<EmployeeResponse> call, Response<EmployeeResponse> response) {
-                adapter.setEmployees(response.body().getResponse());
-            }
 
-            @Override
-            public void onFailure(Call<EmployeeResponse> call, Throwable t) {
-                Toast.makeText(MainActivity.this, "Network error!", Toast.LENGTH_SHORT).show();
-            }
-        });
+//        serviceApi.getEmployees().subscribeOn(Schedulers.io())
 
+//        serviceApi.getEmployees().enqueue(new Callback<EmployeeResponse>() {
+//            @Override
+//            public void onResponse(Call<EmployeeResponse> call, Response<EmployeeResponse> response) {
+//                adapter.setEmployees(response.body().getResponse());
+//            }
+//
+//            @Override
+//            public void onFailure(Call<EmployeeResponse> call, Throwable t) {
+//                Toast.makeText(MainActivity.this, "Network error!", Toast.LENGTH_SHORT).show();
+//            }
+//        });
 
 
 //        Api api = Api.getApi();
@@ -93,15 +119,6 @@ public class MainActivity extends AppCompatActivity {
 //                        Toast.makeText(MainActivity.this, "Error", Toast.LENGTH_SHORT).show();
 //                    }
 //                });
-
-//        PostModel postModel1 = new PostModel();
-//        PostModel postModel2 = new PostModel();
-//        postModel1.setName("hhh");
-//        postModel2.setName("hhheee");
-//        postModel1.setDesc("aaaa");
-//        postModel2.setDesc("aaaa3333");
-//        postModels.add(postModel1);
-//        postModels.add(postModel2);
 
 
     }
