@@ -1,6 +1,9 @@
 package com.demo.retrofitapptest.screens.employees;
 
 import androidx.appcompat.app.AppCompatActivity;
+//import androidx.lifecycle.ViewModelProvider;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -17,27 +20,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class EmployeeLisActivity extends AppCompatActivity implements EmployeesListView {
+public class EmployeeLisActivity extends AppCompatActivity{
     private RecyclerView recyclerView;
-    //    private PostsAdapter adapter;
     private EmployeeAdapter adapter;
     private TextView textViewText;
     private TextView textViewIni;
-    private EmployeeListPresenter presenter;
-
-
-    @Override
-    protected void onDestroy() {
-        presenter.disposable();
-        super.onDestroy();
-    }
+    private EmployeeViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        presenter = new EmployeeListPresenter(this);
         textViewText = findViewById(R.id.textViewText);
         textViewIni = findViewById(R.id.textViewBash);
         recyclerView = findViewById(R.id.recycleView);
@@ -46,18 +40,23 @@ public class EmployeeLisActivity extends AppCompatActivity implements EmployeesL
         adapter.setEmployees(new ArrayList<Employee>());//добавляємо в адаптер пустий список, щоб додаток не падав
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
-        presenter.loadData();
+        viewModel  = ViewModelProviders.of(this).get(EmployeeViewModel.class);
+        viewModel.getEmployees().observe(this, new Observer<List<Employee>>() {
+            @Override
+            public void onChanged(List<Employee> employees) {
+                adapter.setEmployees(employees);
+            }
+        });
+        viewModel.getErrors().observe(this, new Observer<Throwable>() {
+            @Override
+            public void onChanged(Throwable throwable) {
+                if (throwable != null) {
+                    Toast.makeText(EmployeeLisActivity.this, "Error", Toast.LENGTH_SHORT).show();
+                    viewModel.clearErrors();
+                }
+            }
+        });
+        viewModel.loadData();
     }
-
-    @Override
-    public void showData(List<Employee> employees) {
-        adapter.setEmployees(employees);
-    }
-
-    @Override
-    public void showError(Throwable throwable) {
-        Toast.makeText(this, "Network error! " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
-    }
-
 
 }
