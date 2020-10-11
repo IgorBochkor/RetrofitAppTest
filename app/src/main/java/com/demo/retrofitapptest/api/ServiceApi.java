@@ -1,4 +1,4 @@
-package com.demo.retrofitapptest;
+package com.demo.retrofitapptest.api;
 
 
 import com.demo.retrofitapptest.pojo.EmployeeResponse;
